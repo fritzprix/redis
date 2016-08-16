@@ -14,7 +14,7 @@
 
 release_hdr := $(shell sh -c './mkreleasehdr.sh')
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
-OPTIMIZATION?=-O2
+OPTIMIZATION?=-O0
 DEPENDENCY_TARGETS=hiredis linenoise lua
 NODEPS:=clean distclean
 
@@ -34,6 +34,8 @@ else
 	MALLOC=libc
 endif
 
+
+
 # Backwards compatibility for selecting an allocator
 ifeq ($(USE_TCMALLOC),yes)
 	MALLOC=tcmalloc
@@ -47,6 +49,10 @@ ifeq ($(USE_JEMALLOC),yes)
 	MALLOC=jemalloc
 endif
 
+ifeq ($(USE_YAMALLOC),yes)
+	MALLOC=yamalloc
+endif
+
 ifeq ($(USE_JEMALLOC),no)
 	MALLOC=libc
 endif
@@ -57,7 +63,8 @@ endif
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS) $(REDIS_CFLAGS)
 FINAL_LDFLAGS=$(LDFLAGS) $(REDIS_LDFLAGS) $(DEBUG)
 FINAL_LIBS=-lm
-DEBUG=-g -ggdb
+#DEBUG=-g -ggdb
+DEBUG=-g3 -ggdb
 
 ifeq ($(uname_S),SunOS)
 	# SunOS
@@ -109,6 +116,11 @@ ifeq ($(MALLOC),jemalloc)
 	FINAL_LIBS+= ../deps/jemalloc/lib/libjemalloc.a
 endif
 
+ifeq ($(MALLOC),yamalloc)
+	FINAL_CFLAGS+= -DUSE_YAMALLOC -I ../usr/local/include 
+	FINAL_LIBS+= /usr/local/lib/libym.a  /usr/local/lib/libcdsl.a
+endif
+
 REDIS_CC=$(QUIET_CC)$(CC) $(FINAL_CFLAGS)
 REDIS_LD=$(QUIET_LINK)$(CC) $(FINAL_LDFLAGS)
 REDIS_INSTALL=$(QUIET_INSTALL)$(INSTALL)
@@ -138,7 +150,7 @@ REDIS_CHECK_AOF_NAME=redis-check-aof
 REDIS_CHECK_AOF_OBJ=redis-check-aof.o
 
 all: $(REDIS_SERVER_NAME) $(REDIS_SENTINEL_NAME) $(REDIS_CLI_NAME) $(REDIS_BENCHMARK_NAME) $(REDIS_CHECK_RDB_NAME) $(REDIS_CHECK_AOF_NAME)
-	@echo ""
+	@echo "$(MALLOC)"
 	@echo "Hint: It's a good idea to run 'make test' ;)"
 	@echo ""
 

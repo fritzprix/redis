@@ -45,6 +45,12 @@
 #error "Newer version of tcmalloc required"
 #endif
 
+#elif defined(USE_YAMALLOC)
+#define ZMALLOC_LIB ("yamalloc-" __xstr(YAMALLOC_VERSION_MAJOR) "." __xstr(YAMALLOC_VERSION_MINOR))
+#include <yamalloc/malloc.h>
+#define HAVE_MALLOC_SIZE 1
+#define zmalloc_size(p) yam_malloc_size(p)
+
 #elif defined(USE_JEMALLOC)
 #define ZMALLOC_LIB ("jemalloc-" __xstr(JEMALLOC_VERSION_MAJOR) "." __xstr(JEMALLOC_VERSION_MINOR) "." __xstr(JEMALLOC_VERSION_BUGFIX))
 #include <jemalloc/jemalloc.h>
@@ -54,6 +60,7 @@
 #else
 #error "Newer version of jemalloc required"
 #endif
+
 
 #elif defined(__APPLE__)
 #include <malloc/malloc.h>

@@ -66,6 +66,11 @@ void zlibc_free(void *ptr) {
 #define calloc(count,size) je_calloc(count,size)
 #define realloc(ptr,size) je_realloc(ptr,size)
 #define free(ptr) je_free(ptr)
+#elif defined(USE_YAMALLOC)
+#define malloc(size)         yam_malloc(size)
+#define realloc(ptr,size)    yam_realloc(ptr,size)
+#define free(ptr)            yam_free(ptr)
+#define calloc(size,cnt)     yam_calloc(size,cnt)
 #endif
 
 #define update_zmalloc_stat_alloc(__n) do { \
@@ -186,6 +191,7 @@ void zfree(void *ptr) {
     realptr = (char*)ptr-PREFIX_SIZE;
     oldsize = *((size_t*)realptr);
     update_zmalloc_stat_free(oldsize+PREFIX_SIZE);
+	printf("free\n");
     free(realptr);
 #endif
 }
